@@ -1,0 +1,4 @@
+node_modules/
+.claude/
+tests/shots/
+*.log

@@ -1,0 +1,16 @@
+{
+  "name": "kostliva-noc",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "assets": "node tools/assets.mjs",
+    "serve": "node tools/serve.cjs"
+  },
+  "devDependencies": {
+    "@gltf-transform/core": "4.1.1",
+    "@gltf-transform/extensions": "^4.1.1",
+    "@gltf-transform/functions": "4.1.1",
+    "sharp": "^0.33.5",
+    "three": "0.170.0"
+  }
+}

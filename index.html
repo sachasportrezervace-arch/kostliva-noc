@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="herna-protokol" content="1">
+<meta name="theme-color" content="#121829">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Kostlivá noc</title>
+<meta name="description" content="Co-op hordovka pro dva: ubraňte táborák před kostlivci do svítání.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Grenze+Gotisch:wght@700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23121829'/%3E%3Cpath d='M32 10c-11 0-19 8-19 18 0 6 3 10 7 13v8h24v-8c4-3 7-7 7-13 0-10-8-18-19-18z' fill='%23efe6d2'/%3E%3Ccircle cx='24.5' cy='29' r='5' fill='%23121829'/%3E%3Ccircle cx='39.5' cy='29' r='5' fill='%23121829'/%3E%3Ccircle cx='24.5' cy='29' r='2' fill='%2386f3ff'/%3E%3Ccircle cx='39.5' cy='29' r='2' fill='%2386f3ff'/%3E%3C/svg%3E">
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js", "three/addons/": "./vendor/addons/" } }</script>
+<style>
+:root{
+  --bg:#121829; --panel:rgba(16,21,38,.86); --line:rgba(255,236,200,.14); --ink:#f4ead7; --dim:#a9a7b8;
+  --gold:#ffcf72; --rose:#ff7fae; --soul:#86f3ff; --red:#ff5b4d; --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:500 16px/1.35 "Baloo 2",system-ui,sans-serif;overflow:hidden;
+  touch-action:none;user-select:none;-webkit-user-select:none;overscroll-behavior:none}
+canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+.layer{position:fixed;inset:0;pointer-events:none}
+.layer>*{pointer-events:auto}
+.hidden{display:none!important}
+
+/* úvod a lobby */
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  padding:calc(var(--safe-t) + 18px) 16px calc(var(--safe-b) + 18px);
+  background:linear-gradient(180deg,rgba(18,24,41,.88) 0%,rgba(18,24,41,0) 34%,rgba(18,24,41,0) 52%,rgba(18,24,41,.94) 82%)}
+.title{position:absolute;top:calc(var(--safe-t) + 7vh);left:0;right:0;text-align:center}
+.title h1{margin:0;font:700 clamp(52px,15vw,96px)/.9 "Grenze Gotisch",serif;letter-spacing:.01em;color:#efe6d2;
+  text-shadow:0 2px 0 #3b2a1c,0 0 34px rgba(255,170,90,.35)}
+.title p{margin:.55em 0 0;color:var(--dim);font-size:15px}
+.stack{width:min(420px,100%);display:flex;flex-direction:column;gap:10px}
+.btn{display:block;width:100%;padding:14px 18px;border-radius:16px;font-weight:800;font-size:18px;text-align:center;
+  background:linear-gradient(180deg,#ffd98a,#f2b24e);color:#2a1a0c;box-shadow:0 4px 0 #a5641f,0 10px 24px rgba(0,0,0,.35);transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #a5641f,0 4px 12px rgba(0,0,0,.35)}
+.btn.alt{background:rgba(255,255,255,.07);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+.btn.alt:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.field{display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.06);border-radius:14px;padding:4px 6px 4px 14px;box-shadow:inset 0 0 0 1.5px var(--line)}
+.field label{color:var(--dim);font-size:14px;white-space:nowrap}
+.field input{flex:1;min-width:0;background:none;border:0;color:var(--ink);font:700 17px "Baloo 2",sans-serif;padding:9px 4px;outline:none}
+.note{color:var(--dim);font-size:14px;text-align:center;min-height:1.3em}
+.classes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:min(420px,100%)}
+.cls{position:relative;padding:10px 4px 8px;border-radius:14px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1.5px var(--line);text-align:center}
+.cls svg{width:34px;height:34px;display:block;margin:0 auto 2px}
+.cls b{display:block;font-size:14px;font-weight:800}
+.cls.on{background:rgba(255,207,114,.14);box-shadow:inset 0 0 0 2px var(--gold)}
+.cls .mate{position:absolute;top:-6px;right:-4px;width:14px;height:14px;border-radius:50%;background:var(--rose);box-shadow:0 0 0 2px var(--bg)}
+.desc{width:min(420px,100%);text-align:center;color:var(--dim);font-size:14px;min-height:2.6em}
+.share{display:flex;gap:8px}
+.share .btn{flex:1}
+.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:13px;font-weight:700;background:rgba(255,255,255,.08);color:var(--dim)}
+
+/* HUD */
+#hud{padding-top:var(--safe-t)}
+#xp{position:absolute;left:0;right:0;top:var(--safe-t);height:5px;background:rgba(0,0,0,.35)}
+#xp i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4fd5ff,var(--soul));box-shadow:0 0 10px var(--soul);transition:width .2s}
+#top{position:absolute;left:12px;right:12px;top:calc(var(--safe-t) + 12px);display:flex;align-items:center;justify-content:space-between;font-weight:800;pointer-events:none}
+#time{font-size:22px;letter-spacing:.02em;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+.kills{display:flex;gap:10px;font-size:15px;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+.kills span{display:flex;align-items:center;gap:5px}
+.kills i{width:9px;height:9px;border-radius:50%}
+#lv{font-size:14px;color:var(--soul);text-shadow:0 2px 6px rgba(0,0,0,.6)}
+#bossbar{position:absolute;left:50%;transform:translateX(-50%);top:calc(var(--safe-t) + 46px);width:min(360px,72vw);text-align:center;font-weight:800;font-size:13px;letter-spacing:.04em;pointer-events:none}
+#bossbar div{height:7px;border-radius:9px;background:rgba(0,0,0,.45);overflow:hidden;margin-top:3px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+#bossbar i{display:block;height:100%;background:linear-gradient(90deg,#b45cff,#ff7fae)}
+#mute,#pauseBtn{position:absolute;bottom:calc(var(--safe-b) + 12px);width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.28);display:grid;place-items:center;opacity:.75}
+#mute{right:12px}
+#net{position:absolute;right:12px;top:calc(var(--safe-t) + 44px);font-size:12px;color:var(--dim);pointer-events:none}
+#stick{position:fixed;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(255,255,255,.18);background:rgba(255,255,255,.04);pointer-events:none;opacity:0;transition:opacity .15s}
+#stick i{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:rgba(255,236,200,.35)}
+#hint{position:absolute;left:0;right:0;bottom:calc(var(--safe-b) + 70px);text-align:center;color:var(--ink);opacity:.8;font-weight:700;pointer-events:none;transition:opacity .6s}
+
+/* level-up */
+#lvl{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;background:rgba(10,13,24,.62);backdrop-filter:blur(2px)}
+#lvl h2{margin:0;font:700 44px/1 "Grenze Gotisch",serif;color:var(--gold);text-shadow:0 0 24px rgba(255,207,114,.4)}
+#lvl .sub{color:var(--dim);font-size:14px;margin-top:-6px}
+.cards{display:flex;flex-direction:column;gap:10px;width:min(420px,100%)}
+.card{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:16px;background:var(--panel);box-shadow:inset 0 0 0 1.5px var(--line),0 10px 24px rgba(0,0,0,.35);text-align:left;
+  animation:pop .28s cubic-bezier(.2,1.4,.4,1) both}
+.card:nth-child(2){animation-delay:.05s}.card:nth-child(3){animation-delay:.1s}
+.card:active{transform:scale(.98)}
+.card svg{flex:0 0 42px;height:42px}
+.card b{display:block;font-size:18px;font-weight:800}
+.card small{color:var(--dim);font-size:14px}
+.card .pips{margin-left:auto;display:flex;gap:3px}
+.card .pips i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.15)}
+.card .pips i.f{background:var(--gold)}
+.card.duo{box-shadow:inset 0 0 0 1.5px rgba(255,207,114,.45),0 10px 24px rgba(0,0,0,.35)}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.96)}}
+
+/* konec */
+#end.screen{background:linear-gradient(180deg,rgba(14,18,32,.92),rgba(14,18,32,.7) 40%,rgba(14,18,32,.95))}
+#end h2{margin:0;font:700 clamp(46px,13vw,80px)/.95 "Grenze Gotisch",serif;color:#efe6d2;text-align:center;text-shadow:0 0 30px rgba(255,170,90,.3)}
+#end .lead{color:var(--dim);text-align:center;margin:.4em 0 0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:min(420px,100%);margin:6px 0 4px}
+.stat{padding:10px 12px;border-radius:14px;background:var(--panel);box-shadow:inset 0 0 0 1.5px var(--line)}
+.stat small{display:block;color:var(--dim);font-size:13px}
+.stat b{font-size:24px;font-weight:800}
+.stat.mvp{box-shadow:inset 0 0 0 2px var(--gold)}
+.loader{position:fixed;left:50%;bottom:calc(var(--safe-b) + 28px);transform:translateX(-50%);width:160px;height:4px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden}
+.loader i{display:block;height:100%;width:0;background:var(--gold);transition:width .2s}
+.credit{position:fixed;left:0;right:0;bottom:calc(var(--safe-b) + 4px);text-align:center;font-size:11px;color:rgba(169,167,184,.55);pointer-events:none}
+@media (prefers-reduced-motion: reduce){.card{animation:none}}
+@media (min-width:900px){.screen{justify-content:center;padding-top:30vh}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui" class="layer"></div>
+<div id="stick"><i></i></div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

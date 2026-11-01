@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>net.js – P2P test</title>
+</head>
+<body>
+<p>Testovací stránka pro tests/p2p.cjs (bez UI).</p>
+<script>window.KN_API = location.origin + "/mock/";</script>
+<script type="module">
+import * as net from "../src/net.js";
+window.net = net;
+// start(id, role): vytvoří link a sbírá zprávy a stavy do window.L
+window.start = (id, role) => {
+  const L = { msgs: [], fast: [], states: [] };
+  L.link = net.connect({ id, role, onMessage: (o, f) => (f ? L.fast : L.msgs).push(o), onState: s => L.states.push(s) });
+  window.L = L;
+};
+window.ready = true;
+</script>
+</body>
+</html>
