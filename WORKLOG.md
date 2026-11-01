@@ -15,8 +15,12 @@ Nejnovější nahoře. Kontrakt modulů: `SPEC.md`. Pravidla kola her: `../HRY-K
   sim/net/p2p exit 0.
 - Nasazeno: repo `sachasportrezervace-arch/kostliva-noc` (fd7dc80), Pages živě, `node tests/live.cjs` exit 0 (oba prohlížeče).
 - Herna: ef149d2 pushnuto (games.json + ikona kostlivec + deník), lokálně `tests/herna.cjs` 269 PASS / 0 FAIL.
-- Necommitnuto: titul ukazuje oba hrdiny, desktop rozvržení titulu, slabší červený záblesk zranění.
-- Dál: design-eye (snímky `tests/shots/review-*`), opravy, commit + push, živý test znovu.
+- Design-eye kolo 1: „téměř“; prázdné snímky hry na iPhonu = artefakt Playwright WebKit po změně velikosti canvasu
+  (canvas má 187 barev přes drawImage, kreslí dál) → testy nastavují `__knNoAdapt`. Opravy kola 1 v e5771cd (lokálně,
+  nepushnuto): titul s oběma hrdiny, jména u skóre 19 px, kamera na výšku blíž, tmavší kostlivci, větší kroužky, konec čitelnější.
+- Výkon WebKit iPhone 13, 223 nepřátel: sim 0,55 ms/krok, render JS 3,1 ms, 113 draw callů (snímek 196 ms = softwarové
+  vykreslování headless, ne telefon).
+- Dál: design-eye kolo 2 na nových snímcích, push, `node tests/live.cjs`.
 
 ## 2026-11-01 ~23:00 – PŘEDÁVKA (hlavní session má plný kontext, dodělává subagent Pracant)
 - Hotovo navíc: `src/scene.js` (three: zapečení chůze kostlivců do 10 snímků × InstancedMesh, hrdinové SkinnedMesh,

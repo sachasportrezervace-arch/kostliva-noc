@@ -168,8 +168,9 @@ export async function createScene(canvas, onProgress = () => {}) {
     }
     // les za plotem a pár světel
     for (let i = 0; i < 70; i++) {
-      const a = r() * Math.PI * 2, d = R + 2 + r() * 13;
-      put(r() < 0.55 ? (r() < 0.5 ? "tree_pine_orange_medium" : "tree_pine_yellow_small") : r() < 0.5 ? "tree_dead_large" : "tree_dead_medium", Math.cos(a) * d, Math.sin(a) * d, r() * 6.28, 1.1 + r() * 0.9);
+      const a = r() * Math.PI * 2, d = R + 2 + r() * 13, front = Math.sin(a) > 0.2;   // u kamery (dole) jen nízké stromky, ať nezakrývají
+      const k = front ? (r() < 0.5 ? "tree_dead_small" : "tree_pine_yellow_small") : r() < 0.55 ? (r() < 0.5 ? "tree_pine_orange_medium" : "tree_pine_yellow_small") : r() < 0.5 ? "tree_dead_large" : "tree_dead_medium";
+      put(k, Math.cos(a) * d, Math.sin(a) * d, r() * 6.28, front ? 0.8 + r() * 0.3 : 1.1 + r() * 0.9);
     }
     for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + 0.3; put("post_lantern", Math.cos(a) * (R - 1.3), Math.sin(a) * (R - 1.3), -a, 1); }
     for (let i = 0; i < 14; i++) { const a = r() * 6.28, d = 6 + r() * 17; const k = r() < 0.5 ? "pumpkin_orange_jackolantern" : r() < 0.5 ? "skull_candle" : "candle_triple"; put(k, Math.cos(a) * d, Math.sin(a) * d, r() * 6.28, k.startsWith("pumpkin") ? 0.55 : 0.8); }
@@ -473,6 +474,8 @@ export async function createScene(canvas, onProgress = () => {}) {
       // bludičky
       const nOrb = (p.tl && p.tl.svicky) || 0;
       for (let k = 0; k < nOrb; k++) { const a = (p.orb || 0) + k / nOrb * Math.PI * 2; glow.add(r.position.x + Math.cos(a) * 1.9, 0.9, r.position.z + Math.sin(a) * 1.9, 0xffd27a, 1.5, 0.95); glow.add(r.position.x + Math.cos(a) * 1.9, 0.9, r.position.z + Math.sin(a) * 1.9, 0xffffff, 0.5, 1); }
+      // značka nad hlavou v barvě hráče: dva hrdinové přes sebe jdou rozlišit
+      if (!p.dn) { glow.add(r.position.x, 2.35, r.position.z, COL.seat[i], 0.75, 0.9); glow.add(r.position.x, 2.35, r.position.z, 0xffffff, 0.25, 0.8); }
       if (i === st.local) me = r.position;
     });
     // pouto
@@ -541,7 +544,10 @@ export async function createScene(canvas, onProgress = () => {}) {
 
     // kamera
     if (me) {
-      camX += (me.x - camX) * Math.min(1, dt * 5); camZ += (me.z - camZ) * Math.min(1, dt * 5);
+      // kamera nevyjede daleko za plot: u okraje se zastaví, hráč dojde až k plotu
+      let tx = me.x, tz = me.z; const tl = Math.hypot(tx, tz), lim = ARENA_R - (aspect < 1 ? 9 : 5);
+      if (tl > lim) { tx *= lim / tl; tz *= lim / tl; }
+      camX += (tx - camX) * Math.min(1, dt * 5); camZ += (tz - camZ) * Math.min(1, dt * 5);
       heroLight.position.set(me.x, 2.2, me.z + 0.5);
     }
     // na výšku širší záběr: vodorovně má být vidět aspoň ~15 m, jinak horda přijde z ničeho

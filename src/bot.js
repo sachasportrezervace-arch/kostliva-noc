@@ -18,7 +18,7 @@ export function botInput(view, h, partner, t) {
     const dx = partner.x - h.x, dz = partner.z - h.z, d = Math.hypot(dx, dz) || 1;
     if (!alive(partner)) { ax += dx / d * 2.5; az += dz / d * 2.5; }
     else if (d > 8) { ax += dx / d * (d - 8) * 0.25; az += dz / d * (d - 8) * 0.25; }
-    else if (d < 4) { ax -= dx / d * 0.3; az -= dz / d * 0.3; }
+    else if (d < 4) { const k = d < 1.5 ? 1.2 : 0.3; ax -= dx / d * k; az -= dz / d * k; }
     // kroužit kolem kamaráda: pouto tak zametá kosti
     ax += -dz / d * 0.25 * Math.sin(t * 0.3 + 1); az += dx / d * 0.25 * Math.sin(t * 0.3 + 1);
   }
