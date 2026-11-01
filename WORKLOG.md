@@ -2,25 +2,27 @@
 
 Nejnovější nahoře. Kontrakt modulů: `SPEC.md`. Pravidla kola her: `../HRY-KOLO-2026-11-01.md`, Herna: `../HERNA-PROTOKOL.md`.
 
-## 2026-11-02 noc – Pracant dodělává (rozpracováno, průběžný stav)
-- Hotovo: oprava závodu `addHero` (zdvojení hrdinů/kroužků), menší modely (SK_S 0.78, HERO_S 0.88), světlejší scéna, širší
-  kamera na výšku (fov/vzdálenost podle poměru stran, mlha s ní), záblesk bosse omezen; balanc: boss v dosahu má přednost
-  při míření, HP bossů roste s úrovní týmu (Lich 1000+200·lv, strážce 500+90·lv), u Licha řidší horda, mírnější křivka XP,
-  zloděj míří na nejbližší, rytíř delší sek. Testovací háčky `__kn()`, `__knScene()`, `__knAuto`, `__knSpeed`.
-- Síť OPRAVENO: snímek přepisoval `t:"s"` časem (guest neviděl nepřátele) a hostitel při pauze/konci neposílal eventy
-  (level-up a konec by u guesta nikdy nenastaly). Mág: klobouky/pláště hrdinů zpět (černá „hlava“ byly vlasy bez klobouku).
-  Adaptivní pixel ratio (jen dolů při průměru > 24 ms), ztlumené pozadí konce.
-- Testy: `tests/harness.cjs` (server + mock mantledb + rámec Herny), `tests/solo.cjs` chromium exit 0, webkit iPhone 13
-  exit 0; `tests/duo.cjs herna` exit 0; `tests/duo.cjs link` exit 0 (chromium host + webkit guest, relay; Lich padl).
-  sim/net/p2p exit 0.
-- Nasazeno: repo `sachasportrezervace-arch/kostliva-noc` (fd7dc80), Pages živě, `node tests/live.cjs` exit 0 (oba prohlížeče).
-- Herna: ef149d2 pushnuto (games.json + ikona kostlivec + deník), lokálně `tests/herna.cjs` 269 PASS / 0 FAIL.
-- Design-eye kolo 1: „téměř“; prázdné snímky hry na iPhonu = artefakt Playwright WebKit po změně velikosti canvasu
-  (canvas má 187 barev přes drawImage, kreslí dál) → testy nastavují `__knNoAdapt`. Opravy kola 1 v e5771cd (lokálně,
-  nepushnuto): titul s oběma hrdiny, jména u skóre 19 px, kamera na výšku blíž, tmavší kostlivci, větší kroužky, konec čitelnější.
-- Výkon WebKit iPhone 13, 223 nepřátel: sim 0,55 ms/krok, render JS 3,1 ms, 113 draw callů (snímek 196 ms = softwarové
-  vykreslování headless, ne telefon).
-- Dál: design-eye kolo 2 na nových snímcích, push, `node tests/live.cjs`.
+## 2026-11-02 noc – v1 živě (Pracant, hotovo)
+- **Hotovo:** hra https://sachasportrezervace-arch.github.io/kostliva-noc/ (repo `sachasportrezervace-arch/kostliva-noc`,
+  Pages main /, commity fd7dc80, e5771cd, d69018d). V Herně jako 12. hra (herna ef149d2: games.json, ikona `kostlivec`, deník).
+  Opravy: síť (snímek přepisoval `t:"s"` časem → guest neviděl nepřátele; host při pauze/konci neposílal eventy → level-up
+  a konec by u guesta nikdy nenastaly), závod `addHero`, klobouky/pláště hrdinů, kamera na výšku + zastavení u plotu,
+  světlo, značky hrdinů, adaptivní pixel ratio, design-eye 3 kola. Balanc: boss v dosahu má přednost při míření, HP bossů
+  roste s úrovní (Lich 1000+200·lv, strážce 500+90·lv), u Licha řidší horda, mírnější XP křivka, zloděj míří, rytíř delší sek.
+- **Ověřeno (příkaz → exit):** `node tests/sim.test.mjs` 0 · `node tests/net.test.mjs` 0 (9 testů) · `node tests/p2p.cjs` 0 (3) ·
+  `node tests/solo.cjs` chromium 0 (Lich padl t=580, úr. 21, max 240 nepřátel) + webkit iPhone 13 0 · `node tests/duo.cjs link` 0
+  (chromium host + webkit guest přes relay, pohyb obou, zásahy guesta 110 zabití na hostu, level-up čeká na oba, konec u obou,
+  odveta) · `node tests/duo.cjs herna` 0 (iframe, 1 vysledek/okno, stejné partie, jina-hra, tlačítka v 613 px) ·
+  `node tests/live.cjs` 0 (živě chromium + webkit) · Herna `tests/herna.cjs` lokálně 269 PASS / 0 FAIL, games.json živě.
+  Simulace „lidské“ dvojice: Lich za 63–98 s (2 ze 4 párů), slabší pár do svítání. Výkon WebKit iPhone 13 s 223 nepřáteli:
+  sim 0,55 ms/krok, render JS 3,1 ms, 113 draw callů.
+- **Design-eye:** kolo 3 „téměř, hodně blízko k profi indie hra“ (limit 3 kol vyčerpán).
+- **NEOVĚŘENO:** skutečný iPhone (fps, GPU, zvuk, váha písma Baloo 2), WebRTC s WebKitem (v testu jen relay), Herna
+  `tests/mistnost-hry.cjs` Kostlivou noc nezná. Playwright WebKit po změně velikosti canvasu fotí prázdnou plochu
+  (canvas kreslí dál, ověřeno drawImage) → testy mají `__knNoAdapt`.
+- **Dál:** (1) značka nad hlavou hrdiny skoro není vidět – zvětšit/zjasnit, (2) rytíř přepálený (červený záblesk zranění
+  v hordě + heroLight) – omezit, (3) rekvizity blíž ~6 m ke kameře zmenšit/skrýt, jméno bosse s tmavým stínem,
+  (4) HUD za level-upem schovat; přidat kostliva-noc do `herna/tests/mistnost-hry.cjs`; playtest na dvou iPhonech.
 
 ## 2026-11-01 ~23:00 – PŘEDÁVKA (hlavní session má plný kontext, dodělává subagent Pracant)
 - Hotovo navíc: `src/scene.js` (three: zapečení chůze kostlivců do 10 snímků × InstancedMesh, hrdinové SkinnedMesh,
