@@ -40,7 +40,8 @@ function startServer() {
 // Google Fonts v testech blokujeme (offline/rychlost); hra má systémový záložní font
 async function newCtx(browser, opts = {}) {
   const ctx = await browser.newContext(opts);
-  await ctx.addInitScript(() => { window.KN_API = location.origin + "/mock/"; });
+  // __knNoAdapt: Playwright WebKit po změně velikosti canvasu fotí prázdnou plochu (canvas sám kreslí dál)
+  await ctx.addInitScript(() => { window.KN_API = location.origin + "/mock/"; window.__knNoAdapt = 1; });
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
   return ctx;
 }

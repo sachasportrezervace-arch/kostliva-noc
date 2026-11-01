@@ -49,7 +49,7 @@ let phase = "load", mode = null, myId = 0, link = null, roomId = null;
 let names = ["", ""], cls = ["knight", "mage"], seed = 1, gameNo = 0, mateHere = false, hs = [0, 1];
 let world = null, H = [null, null], view = null, K = [0, 0], paused = false, lvlOpen = null, endShown = false;
 let evQ = [], hitQ = [], pending = new Map(), shownDie = new Set(), steps = 0, acc = 0, lastT = performance.now();
-let bossInfo = null, hintT = 0, moved = false, autoPick = null, netKills = 0;
+let bossInfo = null, hintT = 0, moved = false, autoPick = null, netKills = 0, stepMs = 0;
 const herna = Net.parseHerna(location.hash);
 const doHerny = z => { if (herna && window.parent !== window) { try { window.parent.postMessage({ herna: 1, ...z }, "*"); } catch {} } };
 let hernaFaze = "";
@@ -396,7 +396,7 @@ let hudT = 0;
 function hud() {
   render(`<div id="hud" class="layer">
     <div id="xp"><i></i></div>
-    <div id="top"><div class="kills">${[0, 1].map(i => `<span><i style="background:${SEAT_COL[i]}"></i><b id="k${i}">0</b></span>`).join("")}</div>
+    <div id="top"><div class="kills">${[0, 1].map(i => `<span><i style="background:${SEAT_COL[i]}"></i><small>${esc((names[i] || "").slice(0, 8))}</small><b id="k${i}">0</b></span>`).join("")}</div>
       <div id="time">0:00</div><div id="lv">Úr. 1</div></div>
     <div id="bossbar" class="hidden"><span id="bn"></span><div><i id="bhp"></i></div></div>
     <div id="net"></div>
@@ -434,7 +434,9 @@ function frame(now) {
     if (mode !== "solo" || !document.hidden) {
       const sp = window.__knSpeed || 1;   // testy: zrychlený běh
       acc += dt * sp; let n = 0;
+      const ts = performance.now();
       while (acc >= DT && n++ < 4 * sp) { acc -= DT; steps++; mode === "guest" ? stepGuest() : stepHost(); }
+      if (n) stepMs = stepMs * 0.95 + (performance.now() - ts) / n * 0.05;
       if (n >= 4 * sp) acc = 0;
     }
     const src = mode === "guest" ? view : world;
@@ -442,7 +444,7 @@ function frame(now) {
     hudTick(dt);
   } else {
     const hs2 = [0, 1].map(i => ({ x: i ? 1.5 : -1.5, z: 1.4, fx: i ? -0.35 : 0.35, fz: 1, mx: 0, mz: 0, hp: 1, mh: 1, dn: 0, at: 0, tl: {} }));
-    if (!mateHere && mode !== "solo") hs2[otherId()] = null;
+    if (phase === "lobby" && !mateHere && mode !== "solo") hs2[otherId()] = null;   // na titulu stojí u ohně oba
     S.render({ t: 0, local: -1, heroes: hs2, enemies: [], gems: [], shots: [], eshots: [], slams: [] }, dt);
   }
 }
@@ -496,5 +498,5 @@ window.__kn = () => {
   const src = mode === "guest" ? view : world;
   return { phase, mode, myId, paused, lvl: !!lvlOpen, t: src ? src.t : 0, level: mode === "guest" ? view && view.lv : world && world.level,
     enemies: src ? src.enemies.length : 0, K: [...K], hp: H.map(h => h && [Math.round(h.hp), h.mh, h.dn]), pos: H.map(h => h && [+h.x.toFixed(2), +h.z.toFixed(2)]),
-    boss: bossInfo && bossInfo.type, net: link && link.state, over: world && world.over, names: [...names], cls: [...cls], gameNo, netKills, lvlWait: !!(lvlOpen && lvlOpen.picked) };
+    boss: bossInfo && bossInfo.type, net: link && link.state, over: world && world.over, names: [...names], cls: [...cls], gameNo, netKills, stepMs: +stepMs.toFixed(2), lvlWait: !!(lvlOpen && lvlOpen.picked) };
 };

@@ -11,9 +11,12 @@ Nejnovější nahoře. Kontrakt modulů: `SPEC.md`. Pravidla kola her: `../HRY-K
   (level-up a konec by u guesta nikdy nenastaly). Mág: klobouky/pláště hrdinů zpět (černá „hlava“ byly vlasy bez klobouku).
   Adaptivní pixel ratio (jen dolů při průměru > 24 ms), ztlumené pozadí konce.
 - Testy: `tests/harness.cjs` (server + mock mantledb + rámec Herny), `tests/solo.cjs` chromium exit 0, webkit iPhone 13
-  exit 0; `tests/duo.cjs herna` exit 0; `tests/duo.cjs link` (chromium host + webkit guest) běží.
-- Herna: připraveno, NEcommitnuto: `herna/games.json` (kostliva-noc) + ikona `kostlivec` v `herna/ikony.js`.
-- Dál: duo link zeleně, repo + Pages, Herna push + test, design-eye (snímky `tests/shots/review-*`).
+  exit 0; `tests/duo.cjs herna` exit 0; `tests/duo.cjs link` exit 0 (chromium host + webkit guest, relay; Lich padl).
+  sim/net/p2p exit 0.
+- Nasazeno: repo `sachasportrezervace-arch/kostliva-noc` (fd7dc80), Pages živě, `node tests/live.cjs` exit 0 (oba prohlížeče).
+- Herna: ef149d2 pushnuto (games.json + ikona kostlivec + deník), lokálně `tests/herna.cjs` 269 PASS / 0 FAIL.
+- Necommitnuto: titul ukazuje oba hrdiny, desktop rozvržení titulu, slabší červený záblesk zranění.
+- Dál: design-eye (snímky `tests/shots/review-*`), opravy, commit + push, živý test znovu.
 
 ## 2026-11-01 ~23:00 – PŘEDÁVKA (hlavní session má plný kontext, dodělává subagent Pracant)
 - Hotovo navíc: `src/scene.js` (three: zapečení chůze kostlivců do 10 snímků × InstancedMesh, hrdinové SkinnedMesh,

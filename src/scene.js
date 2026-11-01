@@ -105,7 +105,7 @@ export async function createScene(canvas, onProgress = () => {}) {
   scene.fog = new THREE.Fog(COL.fog, 22, 48);
   const camera = new THREE.PerspectiveCamera(42, 1, 0.5, 120);
 
-  scene.add(new THREE.HemisphereLight(0x7080c8, 0x2a2230, 1.7));
+  scene.add(new THREE.HemisphereLight(0x7080c8, 0x2a2230, 1.95));
   const moon = new THREE.DirectionalLight(COL.moon, 1.8); moon.position.set(-8, 18, -6); scene.add(moon);
   const fire = new THREE.PointLight(COL.fire, 60, 16, 1.6); fire.position.set(0, 1.6, 0); scene.add(fire);
   const heroLight = new THREE.PointLight(0xffd9a0, 14, 7, 1.8); scene.add(heroLight);
@@ -262,7 +262,7 @@ export async function createScene(canvas, onProgress = () => {}) {
     const act = {};
     for (const c of g.animations) act[c.name] = mixer.clipAction(c);
     for (const k of [HERO_ATTACK[cls], "Hit_A", "Death_A", "Lie_StandUp", "Cheer"]) if (act[k]) { act[k].setLoop(THREE.LoopOnce); act[k].clampWhenFinished = true; }
-    const ring = new THREE.Mesh(new THREE.PlaneGeometry(1.35, 1.35).rotateX(-Math.PI / 2), arcMaterial(COL.seat[id], 0.95));
+    const ring = new THREE.Mesh(new THREE.PlaneGeometry(1.65, 1.65).rotateX(-Math.PI / 2), arcMaterial(COL.seat[id], 0.95));
     ring.material.uniforms.inner.value = 0.8; ring.position.y = 0.04;
     const ringBg = new THREE.Mesh(ring.geometry, arcMaterial(0x000000, 0.35)); ringBg.material.uniforms.inner.value = 0.8; ringBg.position.y = 0.035;
     const rev = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6).rotateX(-Math.PI / 2), arcMaterial(0xffffff, 0.9)); rev.position.y = 0.05; rev.material.uniforms.inner.value = 0.86; rev.visible = false;
@@ -378,6 +378,7 @@ export async function createScene(canvas, onProgress = () => {}) {
   // adaptivní rozlišení: když snímky trvají dlouho (slabší telefon, hustá horda), sníží se poměr pixelů až na 1
   let perfT = 0, perfN = 0, pr = renderer.getPixelRatio();
   function adapt(dt) {
+    if (window.__knNoAdapt) return;
     perfT += dt; perfN++;
     if (perfT < 2) return;
     const avg = perfT / perfN; perfT = 0; perfN = 0;
@@ -385,7 +386,9 @@ export async function createScene(canvas, onProgress = () => {}) {
     if (next !== pr) { pr = next; renderer.setPixelRatio(pr); resize(); }
   }
 
+  let rms = 0;
   function render(st, dt) {
+    const tr = performance.now();
     adapt(dt);
     const now = performance.now() / 1000 - t0;
     glow.begin();
@@ -430,7 +433,7 @@ export async function createScene(canvas, onProgress = () => {}) {
       const hitSq = e.hit > 0 ? 1.12 : 1;
       M.compose(V.set(e.x, -rise * 1.3, e.z), Q.setFromAxisAngle(UP, yaw), SC.set(hitSq * SK_S, SK_S / hitSq, hitSq * SK_S));
       im.setMatrixAt(im.count, M);
-      if (e.hit > 0) CC.setRGB(3, 3, 3); else if (e.slow) CC.setRGB(0.55, 0.8, 1.5); else CC.setRGB(1, 1, 1);
+      if (e.hit > 0) CC.setRGB(3, 3, 3); else if (e.slow) CC.setRGB(0.55, 0.8, 1.5); else CC.setRGB(0.84, 0.84, 0.88);
       im.setColorAt(im.count, CC);
       im.count++;
       if (rise > 0 && Math.random() < 0.3) sparks.push({ x: e.x + (Math.random() - 0.5), y: 0.1, z: e.z + (Math.random() - 0.5), vx: 0, vy: 1, vz: 0, life: 0.5, max: 0.5, c: 0x6b5a48, s: 0.5, g: 1 });
@@ -459,7 +462,7 @@ export async function createScene(canvas, onProgress = () => {}) {
         if (h.act.Running_A) h.act.Running_A.timeScale = 1.15;
       }
       h.flash = p.hurt > 0 ? 1 : Math.max(0, h.flash - dt * 5);
-      for (const m of h.mats) m.emissive.setRGB(h.flash * 0.7, h.flash * 0.12, h.flash * 0.1);
+      for (const m of h.mats) m.emissive.setRGB(h.flash * 0.45, h.flash * 0.08, h.flash * 0.06);
       h.mixer.update(dt);
       const frac = Math.max(0, p.hp / p.mh);
       h.ring.position.set(r.position.x, 0.04, r.position.z); h.ringBg.position.copy(h.ring.position); h.ringBg.position.y = 0.035;
@@ -542,7 +545,7 @@ export async function createScene(canvas, onProgress = () => {}) {
       heroLight.position.set(me.x, 2.2, me.z + 0.5);
     }
     // na výšku širší záběr: vodorovně má být vidět aspoň ~15 m, jinak horda přijde z ničeho
-    const dist = aspect < 1 ? 1 + (1 - aspect) * 0.6 : 1, fov = aspect < 1 ? 42 + (1 - aspect) * 26 : 42;
+    const dist = aspect < 1 ? 1 + (1 - aspect) * 0.45 : 1, fov = aspect < 1 ? 42 + (1 - aspect) * 26 : 42;
     if (Math.abs(camera.fov - fov) > 0.01) { camera.fov = fov; camera.updateProjectionMatrix(); }
     scene.fog.near = 20 * dist + 4; scene.fog.far = 20 * dist + 30;
     shake = Math.max(0, shake - dt * 2.2);
@@ -550,12 +553,13 @@ export async function createScene(canvas, onProgress = () => {}) {
     camera.position.set(camX + (Math.random() - 0.5) * sh, 17 * dist, camZ + 11.5 * dist + (Math.random() - 0.5) * sh);
     camera.lookAt(camX, 0, camZ + 0.6);
     renderer.render(scene, camera);
+    rms = rms * 0.95 + (performance.now() - tr) * 0.05;
   }
 
   resize();
   // pro testy: co se právě kreslí
   const debug = () => ({ skel: Object.values(skel).reduce((n, k) => n + k.frames.reduce((m, im) => m + im.count, 0), 0),
     tether: tether.visible, heroes: Object.keys(heroes).map(Number).filter(i => heroes[i].root.visible), heroAnim: Object.values(heroes).map(h => h.cur && h.cur.getClip().name),
-    bosses: Object.values(bosses).filter(b => b.root).length, props: staticMesh ? staticMesh.geometry.attributes.position.count : 0, calls: renderer.info.render.calls, px: renderer.getPixelRatio() });
+    bosses: Object.values(bosses).filter(b => b.root).length, props: staticMesh ? staticMesh.geometry.attributes.position.count : 0, calls: renderer.info.render.calls, px: renderer.getPixelRatio(), renderMs: +rms.toFixed(2) });
   return { debug, renderer, scene, camera, addHero, removeHero, setProps, render, fx, resize, preload: cls => loadGlb(HERO_FILE[cls]) };
 }
